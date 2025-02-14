@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 
@@ -10,49 +10,61 @@ export default function Home() {
   const [passphrase, setPassphrase] = useState<string>("");
   const [captchaValue, setCaptchaValue] = useState<string | null>(null);
   const [error, setError] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
   const router = useRouter();
+
+  // Check if user is already logged in
+  useEffect(() => {
+    const isLoggedIn = localStorage.getItem("isLoggedIn");
+    if (isLoggedIn) {
+      router.push("/dashboard");
+    }
+  }, [router]);
 
   const validatePassphrase = (pass: string): string => {
     if (!pass) return "Passphrase is required!";
-    // if (pass.length < 20) return "Passphrase must be at least 20 characters!";
-    // if (!/[A-Z]/.test(pass)) return "Passphrase must contain at least one uppercase letter!";
-    // if (!/[!@#$%^&*(),.?":{}|<>]/.test(pass)) return "Passphrase must contain at least one special character!";
     return "";
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-  
+    setError("");
+    setLoading(true);
+
     const validationError = validatePassphrase(passphrase);
     if (validationError) {
       setError(validationError);
+      setLoading(false);
       return;
     }
-  
+
     if (!captchaValue) {
       setError("Please complete the CAPTCHA!");
+      setLoading(false);
       return;
     }
-  
+
     try {
       const response = await fetch("/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ passphrase }),
       });
-  
+
       const result = await response.json();
-  
+
       if (response.ok) {
-        router.push(result.redirect); // Redirect to change passphrase or dashboard
+        localStorage.setItem("isLoggedIn", "true"); // Store login state
+        router.push(result.redirect);
       } else {
-        setError(result.error); // Show error message
+        setError(result.error);
+        setLoading(false);
       }
     } catch (err) {
       setError("Something went wrong. Try again.");
+      setLoading(false);
     }
   };
-  
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-base-200">
@@ -66,6 +78,7 @@ export default function Home() {
               className="grow"
               value={passphrase}
               onChange={(e) => setPassphrase(e.target.value)}
+              disabled={loading}
             />
           </label>
           {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
@@ -77,8 +90,8 @@ export default function Home() {
             />
           </div>
 
-          <button type="submit" className="btn btn-primary w-full">
-            Login
+          <button type="submit" className="btn btn-primary w-full" disabled={loading}>
+            {loading ? "Logging in..." : "Login"}
           </button>
         </form>
       </div>
