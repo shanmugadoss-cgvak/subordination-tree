@@ -1,10 +1,15 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Header from "../../components/Header";
+import Footer from "../../components/Footer";
+import UserTree from "../../components/UserTree";
+import { User } from "../../types/User";
 
 export default function Dashboard() {
   const router = useRouter();
+  const [users, setUsers] = useState<User[]>([]);
 
   // Check if user is not logged in
   useEffect(() => {
@@ -14,32 +19,26 @@ export default function Dashboard() {
     }
   }, [router]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("isLoggedIn"); // Remove login state
-    router.push("/");
-  };
+  // Load users data
+  useEffect(() => {
+    fetch("/data/users.json")
+      .then(response => response.json())
+      .then(data => setUsers(data));
+  }, []);
 
   return (
-    <div className="min-h-screen bg-base-200">
-      <div className="navbar bg-base-100 shadow-lg">
-        <div className="flex-1">
-          <span className="text-xl">SUBORDINATION TREE</span>
-        </div>
-
-        <div className="flex-none">
-          <ul className="menu menu-horizontal px-1">
-            <li>
-              <button className="btn btn-error text-white" onClick={handleLogout}>
-                Logout
-              </button>
-            </li>
-          </ul>
+    <div className="min-h-screen bg-base-200 flex flex-col">
+      <Header />
+      <div className="flex-grow p-6">
+        <h1 className="text-2xl font-bold mb-4">Welcome to the Dashboard</h1>
+        <p>This is the content area where you can add your HTML content.</p>
+        <p>Feel free to customize this section as needed.</p>
+        <div className="mt-6">
+          <h2 className="text-xl font-bold mb-4">User Tree</h2>
+          <UserTree users={users} parentId={null} />
         </div>
       </div>
-
-      <div className="p-6">
-        tEST
-      </div>
+      <Footer />
     </div>
   );
 }

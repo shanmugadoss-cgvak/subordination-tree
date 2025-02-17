@@ -1,0 +1,32 @@
+[
+    {
+      "id": 1,
+      "name": "Root User",
+      "parentId": null
+    },
+    {
+      "id": 2,
+      "name": "Child User 1",
+      "parentId": 1
+    },
+    {
+      "id": 3,
+      "name": "Child User 2",
+      "parentId": 1
+    },
+    {
+      "id": 4,
+      "name": "Sub Child User 1",
+      "parentId": 2
+    },
+    {
+      "id": 5,
+      "name": "Sub Child User 2",
+      "parentId": 2
+    },
+    {
+      "id": 6,
+      "name": "Sub Child User 3",
+      "parentId": 3
+    }
+  ]
