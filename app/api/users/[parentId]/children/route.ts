@@ -51,12 +51,32 @@ async function fetchChildrenRecursive(
   }
 }
 
+async function fetchUserById(userId: string): Promise<EnhancedPublicUser | null> {
+  const command = new QueryCommand({
+    TableName: "users",
+    KeyConditionExpression: "userId = :userId",
+    ExpressionAttributeValues: {
+      ":userId": userId,
+    },
+    ProjectionExpression: "userId, parentUserId, createdAt, updatedAt",
+  });
+
+  try {
+    const response = await dynamoDb.send(command);
+    return response.Items ? response.Items[0] as EnhancedPublicUser : null;
+  } catch (error) {
+    console.error(`Error fetching user by ID ${userId}:`, error);
+    return null;
+  }
+}
+
 export async function GET(
   request: NextRequest,
-  { params }: { params: { parentId: string } }
+  context: { params: { parentId: string } }
 ) {
   try {
-    const { parentId } = params;
+    const { params } = context;
+    const { parentId } = await params;
 
     if (!parentId) {
       return NextResponse.json(
@@ -65,11 +85,20 @@ export async function GET(
       );
     }
 
+    const parentUser = await fetchUserById(parentId);
+    if (!parentUser) {
+      return NextResponse.json(
+        { error: "Parent user not found" },
+        { status: 404 }
+      );
+    }
+
     const children = await fetchChildrenRecursive(parentId);
 
     return NextResponse.json({
       success: true,
       data: {
+        parentUser,
         children,
         totalCount: calculateTotalDescendants(children),
         parentId,
