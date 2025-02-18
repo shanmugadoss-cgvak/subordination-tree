@@ -98,7 +98,10 @@ export async function GET(
     return NextResponse.json({
       success: true,
       data: {
-        parentUser,
+        parentUser: {
+          ...parentUser,
+          directChildrenCount: children.length
+        },
         children,
         totalCount: calculateTotalDescendants(children),
         parentId,

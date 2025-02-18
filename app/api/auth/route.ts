@@ -71,8 +71,7 @@ export async function POST(request: NextRequest) {
       }
     }, { status: 200 });
 
-  } catch (error) {
-    console.error("Auth error:", error);
+  } catch (error) {    
     return NextResponse.json({
       success: false,
       error: "Internal server error",
