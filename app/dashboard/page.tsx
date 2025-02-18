@@ -1,44 +1,55 @@
-"use client";
+import { cookies } from 'next/headers';
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import UserTree from "@/components/UserTree";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import Header from "../../components/Header";
-import Footer from "../../components/Footer";
-import UserTree from "../../components/UserTree";
-import { User } from "../../types/User";
+interface User {
+  id: string;
+  name: string;
+  parentId: string | null;
+  children: User[];
+}
 
-export default function Dashboard() {
-  const router = useRouter();
-  const [users, setUsers] = useState<User[]>([]);
+interface UserTreePageProps {
+  data: any;
+}
 
-  // Check if user is not logged in
-  useEffect(() => {
-    const isLoggedIn = localStorage.getItem("isLoggedIn");
-    if (!isLoggedIn) {
-      router.push("/");
+const fetchUserData = async (userId: string) => {
+  const response = await fetch(`http://localhost:3000/api/users/${userId}/children`, {
+    cache: 'no-store'
+  });
+  const data = await response.json();
+  return data;
+};
+
+const UserTreePage = async () => {
+  const cookieStore = cookies();
+  const userInfo = cookieStore.get('userInfo')?.value;
+  if (!userInfo) {
+    // Redirect to login page if user is not logged in
+    if (typeof window !== 'undefined') {
+      window.location.href = '/';
     }
-  }, [router]);
+    return null;
+  }
 
-  // Load users data
-  useEffect(() => {
-    fetch("/data/users.json")
-      .then(response => response.json())
-      .then(data => setUsers(data));
-  }, []);
+  const userId = JSON.parse(userInfo).userId;
+  const data = await fetchUserData(userId);
 
   return (
     <div className="min-h-screen bg-base-200 flex flex-col">
       <Header />
-      <div className="flex-grow p-6">
-        <h1 className="text-2xl font-bold mb-4">Welcome to the Dashboard</h1>
-        <p>This is the content area where you can add your HTML content.</p>
-        <p>Feel free to customize this section as needed.</p>
-        <div className="mt-6">
-          <h2 className="text-xl font-bold mb-4">User Tree</h2>
-          <UserTree users={users} parentId={null} />
+      <main className="flex-grow p-6">
+        <div className="container mx-auto">
+          <div className="flex justify-between items-center mb-4">
+            <h1 className="text-2xl font-bold">Users</h1>
+          </div>
+          <UserTree data={data.data} />
         </div>
-      </div>
+      </main>
       <Footer />
     </div>
   );
-}
+};
+
+export default UserTreePage;

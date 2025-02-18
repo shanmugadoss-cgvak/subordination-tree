@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Cookies from "js-cookie";
 
 export default function ChangePassphrase() {
   const [newPassphrase, setNewPassphrase] = useState<string>("");
@@ -28,11 +29,14 @@ export default function ChangePassphrase() {
       return;
     }
 
+    const userInfo = JSON.parse(Cookies.get("userInfo") || "{}");
+    const userId = userInfo.userId;
+
     try {
-      const response = await fetch("/api/change-passphrase", {
+      const response = await fetch("/api/change-my-passphrase", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ newPassphrase }),
+        body: JSON.stringify({ userId, newPassphrase }),
       });
 
       const result = await response.json();
