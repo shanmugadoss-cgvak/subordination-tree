@@ -1,4 +1,5 @@
 import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import UserTree from "@/components/UserTree";
@@ -27,9 +28,7 @@ const UserTreePage = async () => {
   const userInfo = cookieStore.get('userInfo')?.value;
   if (!userInfo) {
     // Redirect to login page if user is not logged in
-    if (typeof window !== 'undefined') {
-      window.location.href = '/';
-    }
+    redirect('/');
     return null;
   }
 
@@ -41,9 +40,6 @@ const UserTreePage = async () => {
       <Header />
       <main className="flex-grow p-6">
         <div className="container mx-auto">
-          <div className="flex justify-between items-center mb-4">
-            <h1 className="text-2xl font-bold">Users</h1>
-          </div>
           <UserTree data={data.data} />
         </div>
       </main>

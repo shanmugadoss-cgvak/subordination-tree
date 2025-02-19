@@ -13,7 +13,7 @@ const LogoutButton: React.FC = () => {
   };
 
   return (
-    <button className="btn btn-error btn-outline btn-sm" onClick={handleLogout}>
+    <button className="btn btn-error btn-outline btn-sm tooltip tooltip-left" data-tip="Logout" onClick={handleLogout}>
       Logout
     </button>
   );
