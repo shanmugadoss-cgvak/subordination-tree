@@ -9,6 +9,10 @@ declare module "sst" {
       "type": "sst.aws.Nextjs"
       "url": string
     }
+    "subordination-tree": {
+      "type": "sst.aws.Nextjs"
+      "url": string
+    }
   }
 }
 /// <reference path="sst-env.d.ts" />

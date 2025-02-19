@@ -16,7 +16,7 @@ interface UserTreePageProps {
 }
 
 const fetchUserData = async (userId: string) => {
-  const response = await fetch(`http://localhost:3000/api/users/${userId}/children`, {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/users/${userId}/children`, {
     cache: 'no-store'
   });
   const data = await response.json();
