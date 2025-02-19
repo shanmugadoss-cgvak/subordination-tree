@@ -129,3 +129,106 @@ export async function GET(
     }, { status: 500 });
   }
 }
+
+export async function POST(request: NextRequest) {
+  try {
+    if (!request.body) {
+      return NextResponse.json(
+        { 
+          success: false,
+          error: "Request body is required",
+          metadata: {
+            timestamp: new Date().toISOString()
+          }
+        },
+        { status: 400 }
+      );
+    }
+
+    const body = await request.json();
+    const { parentId } = body;
+
+    if (!parentId) {
+      return NextResponse.json(
+        { 
+          success: false,
+          error: "parentId is required",
+          metadata: {
+            timestamp: new Date().toISOString()
+          }
+        },
+        { status: 400 }
+      );
+    }
+
+    // Fetch parent user
+    const getParentCommand = new QueryCommand({
+      TableName: "users",
+      KeyConditionExpression: "userId = :parentId",
+      ExpressionAttributeValues: {
+        ":parentId": parentId
+      }
+    });
+
+    const parentResult = await dynamoDb.send(getParentCommand);
+    if (!parentResult.Items || parentResult.Items.length === 0) {
+      return NextResponse.json({
+        success: false,
+        error: "Parent user not found",
+        metadata: {
+          timestamp: new Date().toISOString()
+        }
+      }, { status: 404 });
+    }
+
+    const parentUser = parentResult.Items[0];
+
+    // Fetch children
+    const queryCommand = new QueryCommand({
+      TableName: "users",
+      IndexName: "byParent",
+      KeyConditionExpression: "parentUserId = :parentId",
+      ExpressionAttributeValues: {
+        ":parentId": parentId
+      }
+    });
+
+    const childrenResult = await dynamoDb.send(queryCommand);
+    let children = childrenResult.Items || [];
+
+    // Sort children by createdAt in descending order
+    children = children.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+    // Prepare response
+    const response = {
+      success: true,
+      data: {
+        parentUser: {
+          ...parentUser,
+          directChildrenCount: children.length
+        },
+        children: children.map(child => ({
+          ...child,
+          children: [],
+          directChildrenCount: 0,
+          totalDescendantsCount: 0
+        })),
+        parentId: parentId
+      },
+      metadata: {
+        timestamp: new Date().toISOString()
+      }
+    };
+
+    return NextResponse.json(response);
+
+  } catch (error) {
+    return NextResponse.json({
+      success: false,
+      error: "Internal server error",
+      metadata: {
+        timestamp: new Date().toISOString()
+      }
+    }, { status: 500 });
+  }
+}
